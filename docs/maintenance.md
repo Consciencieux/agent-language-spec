@@ -3,7 +3,7 @@
 本仓库采用**单源维护 + 零依赖同步**的结构，避免手动复制导致的规则漂移：
 
 - **公共规则修改**：编辑 `profiles/general.md`。所有模型都应遵守的语法、事实准确性、去翻译腔、去八股等条款统一放在这里。
-- **模型专项调整**：编辑 `profiles/gpt-codex.md`、`profiles/grok.md` 或 `profiles/deepseek.md`。只维护该模型额外需要强调的偏差，不重复抄写通用规则。
+- **模型专项调整**：编辑 `profiles/gpt-codex.md`、`profiles/grok.md` 或 `profiles/deepseek.md`。只维护该模型需要额外强调的偏差及具体纠偏示例；所有模型都应遵守的规则放在通用规范中，不重复抄写。
 - **参考基准**：需要核对某条规则的完整语义边界和适用条件时，查阅 `references/full-spec.md`。
 
 ## 同步客户端产物
