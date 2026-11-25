@@ -12,4 +12,3 @@ license: MIT
    - **Grok 系列**：读取 `profiles/grok.md`
    - **DeepSeek 系列**：读取 `profiles/deepseek.md`
    - **其他模型**：仅执行通用规范 `profiles/general.md`。
-3. **需要查看完整边界条件或修订细则时**：按需查阅 `references/full-spec.md` 的相关条目，日常使用无需全文加载。

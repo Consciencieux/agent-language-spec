@@ -21,10 +21,17 @@
 | **DeepSeek Harness / API** | DeepSeek | [`clients/deepseek-harness/system-prompt.md`](clients/deepseek-harness/system-prompt.md)（填入 System Prompt） |
 | **通用 Agent Skills 客户端** | 按模型切换 | 根目录 [`SKILL.md`](SKILL.md) + `profiles/` |
 
-## 文档导航
+> 详细安装与避坑见 [installation.md](docs/installation.md)。
 
-- 各客户端详细安装与避坑：[`docs/installation.md`](docs/installation.md)
-- 不同模型的输出偏差观察：[`docs/model-behaviors.md`](docs/model-behaviors.md)
-- 规范修改与同步方式：[`docs/maintenance.md`](docs/maintenance.md)
-- 完整版 27 主题参考规范：[`references/full-spec.md`](references/full-spec.md)
-- 仓库目录： [`docs/structure.md`](docs/structure.md)。
+## 目录结构
+
+```text
+agent-language-spec/
+├── README.md                  # 项目介绍与快速上手
+├── SKILL.md                   # 通用 Agent Skill 入口
+├── AGENTS.md                  # 规范维护与同步说明
+├── profiles/                  # 规则源：general.md（通用）+ 3 个模型专项增量
+├── clients/                   # 同步生成的各客户端单文件规则（开箱即用）
+├── docs/installation.md       # 各客户端安装教程
+└── scripts/sync.py            # 零依赖同步脚本（profiles -> clients）
+```
