@@ -1,35 +1,37 @@
-# Agent Communication
+# Agent Language Spec（让你的Agent回复时说人话）
 
-完整的 Agent 中文沟通规范。用于解释、判断、技术讨论、进度与交付说明，同时规定成文动作和输出前审核。
+## 背景
 
-## 使用
+很多编程 Agent 和大模型在写中文回复时，虽然写的字分开看都认识，但是连起来读就不说人话，读起来极其难懂吃力，常见的问题有五类：
 
-完整读取 `SKILL.md`。所有执行规则均在正文中，包括用词、命名、中英使用、主语、谓语、搭配、修饰、名词化、句间承接、解释、数字、修辞、否定、重复、篇章、标题、格式、语言反馈和审核。没有需要另外加载的示例库。
+* **在明确问题上强行找反例、加免责**：哪怕用户问的是常识、确定事实，或者已经由代码唯一锁定的行为，模型也硬是要找一个极低概率的边缘场景，甚至硬编一个不合逻辑的反例，再补上一句“大部分情况下成立，但这不能证明始终成立，也不能排除极端情况”，就是不敢给一个肯定答复（说的就是GPT）。
+* **把刚读过的工具上下文当成已知背景，只报零散事实**：做完排查或改完代码后，不先交代“解决了什么问题、外部行为有什么变化”，而是按自己打开文件的顺序，连续输出一串十几字、彼此没有因果衔接的短判断句。没有按照用户能够理解的功能来组织，而更像是在按照开发过程中修改的代码路径逐项总结。
+* **删掉连接词和主语，把代码逻辑硬压成碎短句**：虽然表面上用了常见中文词，但把“因为、所以、如果、但是”以及执行动作的主体省掉了，多个动作名词直接用顿号或斜杠并排在一起，把状态切换、防抖阈值和异常处理全压成连续流水账，读起来像在逐行直译代码 diff。这比直接使用规范的技术术语还难理解，因为读者连检索概念、联系已有知识的机会都减少了。
+* **靠熟络套话、比喻和标点制造“人味”与“深度”**：在技术解释里硬插“其实吧”“说白了”“问题来了：”这种过度表演、太满太油的语句，并且用莫名其妙的无关意象打狗屁不通的比方，以至于让人产生生理不适，输出语言像是某种生物刻意模仿人类的伪人口语；滥用双引号，批量加在普通名词上模拟重音，把两句话就能说清的因果强行拆成带加粗小标题的列表或拼凑出来的表格。
+* **用英文句法或公文套话填充中文句子**：保留英语的被动语态（“该配置已被更新，以便错误可以被避免”）和塞在“的”字前面的超长前置定语，或者把英文名词直接当中文动词用；另一类则是在总结和建议时自动切回“随着架构不断演进”“在当前背景下”“不仅提升了稳定性，更为后续扩展赋能”一类的公文汇报句式。
 
-正文包含 27 个主题与 26 项输出前审核要求。规则依照具体的适用条件要求删除、恢复、调整或重写文字；审核直接处理当前稿，结束于实际修正。
+这个仓库整理了一套精简的中文提示词，用来解决上面这些问题。
 
-## 安装到 Cursor
+## 快速使用
 
-使用 `agent-communication-complete-cursor.zip`，将其中的 `.cursor/` 目录合并到项目根目录。
+| 使用环境 | 主力模型 | 直接使用的文件 |
+| :--- | :--- | :--- |
+| **Cursor** | Grok | [`clients/cursor/agent-lang-grok.mdc`](clients/cursor/agent-lang-grok.mdc)（放入 `.cursor/rules/`） |
+| **Codex (CLI / IDE)** | GPT / Codex | [`clients/codex/AGENTS.md`](clients/codex/AGENTS.md)（放入项目根目录或 `~/.codex/`） |
+| **DeepSeek Harness / API** | DeepSeek | [`clients/deepseek-harness/system-prompt.md`](clients/deepseek-harness/system-prompt.md)（填入 System Prompt） |
+| **通用 Agent Skills 客户端** | 按模型切换 | 根目录 [`SKILL.md`](SKILL.md) + `profiles/` |
 
-- `.cursor/rules/agent-communication.mdc` 设为 `alwaysApply: true`，包含完整正文。
-- `.cursor/skills/agent-communication/SKILL.md` 提供同内容的 Skill 入口，以及来源和许可证文件。
+> 详细安装与避坑见 [installation.md](docs/installation.md)。
 
-已有安装时，替换同名规则，并用新目录整体替换旧的 `agent-communication` Skill 目录。旧版 `references/examples.md` 和旧版自定义 User Rules 文字不继续使用。新建会话后在规则设置中确认该规则已启用。
+## 目录结构
 
-规则直接携带全文，没有依赖模型自行打开的外部规则链接。Skill 与规则来自同一份正文；正文已在当前上下文完整出现时，入口要求直接执行。
-
-Cursor 官方机制说明：
-
-- `https://cursor.com/docs/rules`
-- `https://cursor.com/docs/skills`
-
-## 安装到其他兼容客户端
-
-解压 `agent-communication-complete-skill.zip`，将 `agent-communication/` 整个目录放入该客户端支持的 Skills 目录，并通过客户端实际提供的方式激活。跨会话的常驻投递采用该客户端的规则设置；独立 Skill 包本身只提供规范及其入口。
-
-## 维护
-
-修改 `SKILL.md` 时，以它作为正文来源，同步生成 Cursor 规则：删除 YAML 头，添加 `description` 与 `alwaysApply: true` 的规则头，其余正文保持逐字一致。保留 `LICENSE` 和 `SOURCES.md`。
-
-针对模型效果，本包尚未进行 Grok 或 DeepSeek 的实际运行对照。此次交付完成的是规范重写与安装文件校验。
+```text
+agent-language-spec/
+├── README.md                  # 项目介绍与快速上手
+├── SKILL.md                   # 通用 Agent Skill 入口
+├── AGENTS.md                  # 规范维护与同步说明
+├── profiles/                  # 规则源：general.md（通用）+ 3 个模型专项增量
+├── clients/                   # 同步生成的各客户端单文件规则（开箱即用）
+├── docs/installation.md       # 各客户端安装教程
+└── scripts/sync.py            # 零依赖同步脚本（profiles -> clients）
+```
