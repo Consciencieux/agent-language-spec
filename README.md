@@ -13,10 +13,11 @@
 | **GPT / Codex** | 偏公文、司法审计风，或爱直接倾倒工作上下文的模型 | 满篇未解释的内部代号、15–25 字孤立判断句无限连发、行号和 commit 堵在主干里、按排查顺序记流水账 | [`profiles/gpt-codex.md`](profiles/gpt-codex.md) |
 | **Grok** | 偏极简压缩风，或在“冷硬电报”与“耍贫嘴”间反复横跳的模型 | 砍光连接词和主语的“电报体”、用大白话词汇硬套高密度代码状态机；一旦要求“自然”，又容易滑向网络梗和表演式口语 | [`profiles/grok.md`](profiles/grok.md) |
 | **DeepSeek** | 偏戏剧化表达、重度推理自白与排版强迫症的模型 | 刻意模仿人类聊天的“伪人口语”、莫名其妙的比喻和自造黑话，以及双引号、冒号、破折号、加粗和逻辑不通的表格泛滥 | [`profiles/deepseek.md`](profiles/deepseek.md) |
+| **开源与国产通用模型** | Llama、Mistral、Qwen、GLM 等开源或通用对话模型 | 英文直译腔（被动句泛滥、超长前置定语、“当谈到……时”）、国产公文申论八股腔（“随着……发展”“赋能/抓手”“综上所述”） | [`profiles/open-models.md`](profiles/open-models.md) |
 
 > **如何判断其他模型归哪一类？**
 
-> 如果它输出像“冷冰冰的审计纪要、看不懂内部术语”，用 `gpt-codex.md`；如果它输出像“没标点过渡的压缩补丁日志”，用 `grok.md`；如果它输出“爱打比方、满篇双引号加粗和熟络语气词”，用 `deepseek.md`。
+> 如果它输出像“冷冰冰的审计纪要、看不懂内部术语”，用 `gpt-codex.md`；如果它输出像“没标点过渡的压缩补丁日志”，用 `grok.md`；如果它输出“爱打比方、满篇双引号加粗和熟络语气词”，用 `deepseek.md`。如果它输出“被动句和长定语满满的英文翻译腔”，或“一开口就是随着技术发展、赋能协同的公文八股”，用 `open-models.md`。
 
 ## 仓库目录结构
 
@@ -29,12 +30,14 @@ agent-language-spec/
 │   ├── gpt-codex.md                           # GPT / Codex 专用规范
 │   ├── grok.md                                # Grok 专用规范
 │   └── deepseek.md                            # DeepSeek 专用规范
+│   └── open-models.md                         # 开源与国产通用模型规范（治翻译腔与公文八股）
 ├── clients/                                   # 按编程软件封装好的即用配置文件
 │   ├── cursor/
 │   │   ├── rules/                             # Cursor .mdc 常驻规则（每次只启用一个对应模型的）
 │   │   │   ├── agent-lang-gpt.mdc
 │   │   │   ├── agent-lang-grok.mdc
 │   │   │   └── agent-lang-deepseek.mdc
+│   │   │   └── agent-lang-open-models.mdc
 │   │   └── skills/
 │   │       └── agent-language-spec/SKILL.md   # Cursor Skill 按需入口
 │   ├── codex/
@@ -57,6 +60,7 @@ Cursor 支持通过 `.cursor/rules/*.mdc` 常驻注入规则，也支持通过 `
    - 常用 GPT 系列：复制 `clients/cursor/rules/agent-lang-gpt.mdc`
    - 常用 Grok 系列：复制 `clients/cursor/rules/agent-lang-grok.mdc`
    - 常用 DeepSeek 系列：复制 `clients/cursor/rules/agent-lang-deepseek.mdc`
+   - 常用 Llama / Mistral / Qwen / GLM 等模型：复制 `clients/cursor/rules/agent-lang-open-models.mdc`
 2. 文件头已配置 `alwaysApply: true`，打开 Cursor 的 **Settings → Rules** 确认该规则已处于启用状态，新建会话即可生效。
 
 > **避坑提示**：不要把三个模型的 `.mdc` 文件同时放进 `.cursor/rules/` 并全部开启 `alwaysApply: true`。它们针对不同模型的反向纠偏指令会互相冲突，而且会白白占用三倍上下文。如果你经常切换模型，可以在 Cursor 中将其中两条改为 `Manual`（手动 `@` 引用），只保留主力模型那一条为 `Always`。
