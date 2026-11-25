@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify client prompts are synced
+        run: python3 scripts/sync.py --check
+
+      - name: Build release assets
+        run: |
+          python3 - << 'EOF'
+          import hashlib
+          from pathlib import Path
+          import shutil
+          import zipfile
+
+          root = Path(".")
+          dist = root / "dist"
+          if dist.exists():
+              shutil.rmtree(dist)
+          dist.mkdir(parents=True)
+
+          def make_zip(zip_name: str, entries: list[tuple[Path, str]]) -> None:
+              with zipfile.ZipFile(dist / zip_name, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+                  for src, arcname in entries:
+                      zf.write(src, arcname)
+
+          def make_zip_from_text(zip_name: str, file_entries: list[tuple[Path, str]], text_entries: list[tuple[str, str]]) -> None:
+              with zipfile.ZipFile(dist / zip_name, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+                  for src, arcname in file_entries:
+                      zf.write(src, arcname)
+                  for arcname, content in text_entries:
+                      zf.writestr(arcname, content)
+
+          # 1. Cursor (Grok)
+          make_zip(
+              "agent-language-spec-cursor-grok.zip",
+              [
+                  (root / "clients/cursor/agent-lang-grok.mdc", ".cursor/rules/agent-lang-grok.mdc"),
+                  (root / "LICENSE", "LICENSE"),
+              ],
+          )
+
+          # 2. Codex
+          make_zip(
+              "agent-language-spec-codex.zip",
+              [
+                  (root / "clients/codex/AGENTS.md", "AGENTS.md"),
+                  (root / "LICENSE", "LICENSE"),
+              ],
+          )
+
+          # 3. Universal Skill
+          skill_entries = [
+              (root / "SKILL.md", "agent-language-spec/SKILL.md"),
+              (root / "LICENSE", "agent-language-spec/LICENSE"),
+          ]
+          for p in sorted((root / "profiles").glob("*.md")):
+              skill_entries.append((p, f"agent-language-spec/profiles/{p.name}"))
+          make_zip("agent-language-spec-skill.zip", skill_entries)
+
+          # 4. Pure Prompts (merged standalone versions without client wrappers)
+          general_text = (root / "profiles/general.md").read_text(encoding="utf-8").strip()
+          merged_texts = [("general.md", general_text + "\n")]
+          for name in ("gpt-codex", "grok", "deepseek"):
+              delta_text = (root / "profiles" / f"{name}.md").read_text(encoding="utf-8").strip()
+              merged_texts.append((f"{name}-full.md", f"{general_text}\n\n{delta_text}\n"))
+
+          make_zip_from_text(
+              "agent-language-spec-prompts.zip",
+              [(root / "LICENSE", "LICENSE")],
+              merged_texts,
+          )
+
+          # 5. DeepSeek raw single-file prompt
+          shutil.copy2(root / "clients/deepseek-harness/system-prompt.md", dist / "deepseek-system-prompt.md")
+
+          # 6. SHA256SUMS
+          lines = []
+          for f in sorted(dist.iterdir()):
+              if f.is_file():
+                  digest = hashlib.sha256(f.read_bytes()).hexdigest()
+                  lines.append(f"{digest}  {f.name}")
+          (dist / "SHA256SUMS.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          EOF
+
+      - name: Upload workflow artifact on manual run
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-preview
+          path: dist/*
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: dist/*
